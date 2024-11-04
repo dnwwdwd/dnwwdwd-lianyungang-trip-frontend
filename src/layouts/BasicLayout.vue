@@ -1,155 +1,144 @@
 <template>
-  <a-layout style="min-height: 100vh">
-    <a-layout-sider style="background: #FFFFFF;">
-      <div style="display: flex; justify-content: center; align-items: center; margin-top: 20px; margin-bottom: 5px;">
-        <img src="../assets/logo.png" width="45" height="45" style="margin-right: 10px;"/>
-        <span style="color: #31C27C">基于Vue+Django的音乐分享网站</span>
-      </div>
-      <a-menu v-model:selectedKeys="selectedKeys" theme="light" mode="inline">
+  <a-layout class="layout" style="min-height: 100vh; display: flex; flex-direction: column;">
+    <a-layout-header :style="{ background: '#fff', display: 'flex', alignItems: 'center', marginBottom: '24px' }">
+      <img src="../assets/logo.png" alt="Logo" style="height: 40px; margin-right: 20px"/>
+      <span style="font-size: 15px; color: #1E90FF">连云港旅游网站的设计与实现</span>
+      <!-- 动态高亮菜单项 -->
+      <a-menu
+          :selectedKeys="selectedKeys"
+          theme="light"
+          mode="horizontal"
+          :style="{ lineHeight: '64px', flexGrow: 1 }"
+      >
         <a-menu-item key="1">
-          <router-link to="/">
-            <UngroupOutlined/>
-            <span>音乐推荐</span>
-          </router-link>
+          <router-link to="/">首页</router-link>
         </a-menu-item>
         <a-menu-item key="2">
-          <router-link to="/hot/music">
-            <FormOutlined/>
-            <span>热门音乐</span>
-          </router-link>
+          <router-link to="/trip/strategy">旅游攻略</router-link>
         </a-menu-item>
         <a-menu-item key="3">
-          <router-link to="/singer/recommend">
-            <desktop-outlined/>
-            <span>歌手推荐</span>
-          </router-link>
+          <router-link to="/my/reserve">我的预约</router-link>
         </a-menu-item>
         <a-menu-item key="4">
-          <router-link to="/song/star">
-            <desktop-outlined/>
-            <span>收藏音乐</span>
-          </router-link>
-        </a-menu-item>
-        <a-menu-item key="5">
-          <router-link to="/setting">
-            <CommentOutlined/>
-            <span>个人设置</span>
-          </router-link>
+          <router-link to="/setting">个人设置</router-link>
         </a-menu-item>
       </a-menu>
-    </a-layout-sider>
-    <a-layout>
-      <a-layout-header style="background: #fff; padding: 0; height: 60px">
-        <div style="display: flex; justify-content: space-between; align-items: center">
-          <span style="font-size: 20px; margin-left: 20px; color: #1E90FF">{{ title }}</span>
-          <div style="margin-right: 30px">
-            <a-button style="margin-right: 20px; color: #31C27C">上传音乐</a-button>
-            <a-dropdown>
-              <a-avatar
-                  shape="circle"
-                  :src="user.avatarUrl"
-              />
-              <template #overlay>
-                <a-menu>
-                  <a-menu-item>
-                    <router-link to="/">前台页面</router-link>
-                  </a-menu-item>
-                  <a-menu-item>
-                    <router-link to="/user/login" @click="userLogout">退出登录</router-link>
-                  </a-menu-item>
-                </a-menu>
-              </template>
-            </a-dropdown>
-          </div>
-        </div>
-      </a-layout-header>
-      <a-layout-content style="margin: 0 16px">
-        <router-view/>
-      </a-layout-content>
-      <a-layout-footer style="text-align: center">
-        Designed by 徐志鹏
-      </a-layout-footer>
-    </a-layout>
+
+      <a-dropdown style="margin-left: auto">
+        <a-avatar
+            shape="circle"
+            :src="user.userAvatar"
+        />
+        <template #overlay>
+          <a-menu>
+            <a-menu-item>
+              <router-link to="/user/login" @click="userLogout">退出登录</router-link>
+            </a-menu-item>
+          </a-menu>
+        </template>
+      </a-dropdown>
+    </a-layout-header>
+
+    <a-layout-content style="padding: 0 50px; height: 600px;">
+      <router-view/>
+    </a-layout-content>
   </a-layout>
 </template>
+
 <script lang="js" setup>
-import {CommentOutlined, DesktopOutlined, FormOutlined, UngroupOutlined,} from '@ant-design/icons-vue';
 import {onMounted, ref, watchEffect} from 'vue';
-import {useRoute, useRouter} from "vue-router";
-import {getCurrentUser} from "../services/user.js";
-import {message} from "ant-design-vue";
+import {useRoute} from 'vue-router';
 import myAxios from "../plugins/myAxios.js";
-import routes from "../route/index.js";
-import {getCookie} from "../utils/utils.js";
+import {message} from "ant-design-vue";
+import {getCurrentUser} from "../services/user.js";
 
 const selectedKeys = ref([]);
 
-const title = ref('');
-
 const route = useRoute();
-const router = useRouter();
-
+const isAdmin = ref(false);
 const user = ref({});
-
-watchEffect(() => {
-  // 根据当前路由的 path 来设置选中的菜单项
-  switch (route.path) {
-    case '/':
-      selectedKeys.value = ['1'];
-      break;
-    case '/hot/music':
-      selectedKeys.value = ['2'];
-      break;
-    case '/singer/recommend':
-      selectedKeys.value = ['3'];
-      break;
-    case '/song/star':
-      selectedKeys.value = ['4'];
-      break;
-    case '/setting':
-      selectedKeys.value = ['5'];
-      break;
-    default:
-      // 如果没有匹配到任何菜单项，清空选中项
-      selectedKeys.value = [];
-  }
-});
-
-router.beforeEach((to, from) => {
-  routes.forEach(route => {
-    if (to.path === route.path) {
-      title.value = route.title;
-      console.log(route.title)
-    }
-  });
-});
 
 onMounted(async () => {
   if (!route.path.includes('/user/login') && !route.path.includes('/user/register')) {
     const res = await getCurrentUser();
     if (res) {
       user.value = res;
+      isAdmin.value = user.value.userRole === "admin";
     }
   }
 });
 
-const userLogout = async () => {
-  const csrfToken = getCookie('csrftoken'); // 获取 CSRF token
-  const res = await myAxios.post('/user/logout', {}, {
-    headers: {
-      'X-CSRFToken': csrfToken, // 添加 CSRF token
-    },
-    withCredentials: true, // 确保携带 Cookie
-  });
 
-  if (res.data.code === 0) {
-    message.success('登出成功！');
-    // 清理本地存储的用户信息等
-  } else {
-    message.error('登出失败: ' + res.data.message);
+watchEffect(() => {
+  switch (route.path) {
+    case '/':
+      selectedKeys.value = ['1'];
+      break;
+    case '/car/rent':
+      selectedKeys.value = ['2'];
+      break;
+    case '/order':
+      selectedKeys.value = ['3'];
+      break;
+    case '/news':
+      selectedKeys.value = ['4'];
+      break;
+    default:
+      selectedKeys.value = [];
   }
+});
+
+const userLogout = async () => {
+  const res = await myAxios.post('/user/logout');
+  message.success('退出成功');
 };
 
+const open = ref(false);
+
+const petForumOpen = ref(false);
+
+const formModal = ref({
+  petName: '',
+  age: '',
+  sex: '',
+  state: '',
+  isSterilized: '',
+  isVaccination: '',
+  description: '',
+  type: '',
+  avatarUrl: '',
+  variety: '',
+});
+
+const petForumModal = ref({
+  name: '',
+  imgUrl: '',
+  description: '',
+});
+
+const showModal = () => {
+  open.value = true;
+};
+
+const showPetForumModal = () => {
+  petForumOpen.value = true;
+};
+
+// const handleOk = async () => {
+//   const res = await myAxios.post('/donate/pet', formModal.value);
+//   if (res.code === 0) {
+//     open.value = false;
+//     window.location.reload();
+//   }
+// };
+//
+// const handlePetForumOk = async () => {
+//   const res = await myAxios.post('/pet/forum/add', petForumModal.value);
+//   if (res.code === 0) {
+//     petForumOpen.value = false;
+//     window.location.reload();
+//   }
+// };
 
 </script>
 

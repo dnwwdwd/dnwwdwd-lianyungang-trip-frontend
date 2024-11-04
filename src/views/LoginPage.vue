@@ -105,8 +105,7 @@ const onFinish = async (values: any) => {
       loginFailed();
     }
   } catch (error) {
-    console.error('请求出错:', error);
-    message.error('请求失败，请稍后重试');
+    message.error('登录失败' + (error.message ? `，${error.message}` : ''));
   }
 };
 

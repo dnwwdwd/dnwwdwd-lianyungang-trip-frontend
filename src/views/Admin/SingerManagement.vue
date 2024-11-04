@@ -1,20 +1,13 @@
 <template>
-  <a-button type="primary" class="editable-add-btn" style="margin-bottom: 8px; margin-top: 12px" @click="handleAdd">
-    添加论坛
-  </a-button>
-  <a-modal v-model:open="open" title="添加论坛" @ok="handleOk" cancelText="取消" okText="确认添加">
-    论坛名称：
-    <a-input v-model:value="formModal.name" class="a-input"/>
-    创建人 ID：
-    <a-input v-model:value="formModal.userId" class="a-input"/>
-    图片：
-    <a-input v-model:value="formModal.imgUrl" class="a-input"/>
-    论坛描述：
-    <a-input v-model:value="formModal.description" class="a-input"/>
+  <a-button type="primary" class="editable-add-btn" style="margin-bottom: 8px; margin-top: 12px" @click="handleAdd">添加歌手</a-button>
+  <a-modal v-model:open="open" title="添加歌手" @ok="handleOk" cancelText="取消" okText="确认添加">
+    歌手名：<a-input v-model:value="formModal.name" class="a-input"/>
+    描述：<a-input v-model:value="formModal.description" class="a-input"/>
+    图片：<a-input v-model:value="formModal.imgUrl" class="a-input"/>
   </a-modal>
   <a-table :columns="columns" :data-source="dataSource" bordered>
     <template #bodyCell="{ column, text, record }">
-      <template v-if="['userId', 'name', 'imgUrl', 'description'].includes(column.dataIndex)">
+      <template v-if="[ 'imgUrl', 'name', 'description'].includes(column.dataIndex)">
         <div>
           <a-input
               v-if="editableData[record.key]"
@@ -31,60 +24,55 @@
           </template>
         </div>
       </template>
+
       <!-- 对 operation 字段显示编辑/保存/取消/删除操作 -->
       <template v-else-if="column.dataIndex === 'operation'">
         <div class="editable-row-operations">
-        <span v-if="editableData[record.key]">
-          <a-typography-link @click="save(record.key)">确定</a-typography-link>
-          <a-popconfirm title="你确定取消吗？" @confirm="cancel(record.key)" ok-text="确定" cancel-text="取消">
-            <a>取消</a>
-          </a-popconfirm>
-        </span>
+          <span v-if="editableData[record.key]">
+            <a-typography-link @click="save(record.key)">确定</a-typography-link>
+            <a-popconfirm title="你确定取消吗？" @confirm="cancel(record.key)" ok-text="确定" cancel-text="取消">
+              <a>取消</a>
+            </a-popconfirm>
+          </span>
           <span v-else>
-          <a @click="edit(record.key)">修改</a>
-          <a-popconfirm title="你确定删除吗？" @confirm="onDelete(record.key)" ok-text="确定" cancel-text="取消">
-            <a>删除</a>
-          </a-popconfirm>
-        </span>
+            <a @click="edit(record.key)">修改</a>
+            <a-popconfirm title="你确定删除吗？" @confirm="onDelete(record.key)" ok-text="确定" cancel-text="取消">
+              <a>删除</a>
+            </a-popconfirm>
+          </span>
         </div>
       </template>
     </template>
   </a-table>
-
 </template>
 
 <script setup>
 import {cloneDeep} from 'lodash-es';
-import {reactive, ref, computed, onMounted} from 'vue';
+import {onMounted, reactive, ref} from 'vue';
 import myAxios from "../../plugins/myAxios.js";
 import {message} from "ant-design-vue";
 
 // 表格列定义
 const columns = [
   {
-    title: '创建人 ID',
-    dataIndex: 'userId',
-    width: '10%',
-  },
-  {
-    title: '论坛名称',
+    title: '歌手名',
     dataIndex: 'name',
-    width: '20%',
-  },
-  {
-    title: '图片',
-    dataIndex: 'imgUrl',
-    width: '25%',
+    width: '10%',
   },
   {
     title: '描述',
     dataIndex: 'description',
-    width: '20%',
+    width: '10%',
+  },
+  {
+    title: '图片',
+    dataIndex: 'imgUrl',
+    width: '10%',
   },
   {
     title: '操作',
     dataIndex: 'operation',
-    width: '15%'
+    width: '10%'
   },
 ];
 
@@ -102,8 +90,9 @@ const edit = (key) => {
 const save = async (key) => {
   // 编辑保存后的新值
   const editedData = editableData[key];
+  const item = dataSource.value.find(item => item.key === key);
   // 请求后端更新数据
-  const res = await myAxios.post('/pet/forum/update', editedData);
+  const res = await myAxios.post(`/singer/update/${item.id}`, editedData);
   if (res.code === 0) {
     Object.assign(dataSource.value.find(item => item.key === key), editedData);
     message.success('修改成功');
@@ -120,13 +109,9 @@ const cancel = (key) => {
 
 // 删除函数，点击删除按钮时调用
 const onDelete = async (key) => {
-  console.log(key);
   const item = dataSource.value.find(item => item.key === key);
-  console.log(item.id);
   // 请求后端删除数据
-  const res = await myAxios.post('/pet/forum/delete', {
-    id: item.id,
-  });
+  const res = await myAxios.post(`/singer/delete/${item.id}`);
   if (res.code === 0) {
     dataSource.value = dataSource.value.filter(item => item.key !== key);
     message.success('删除成功');
@@ -136,7 +121,6 @@ const onDelete = async (key) => {
 };
 
 const formModal = ref({
-  userId: '',
   name: '',
   imgUrl: '',
   description: '',
@@ -148,20 +132,20 @@ const handleAdd = () => {
 };
 
 const handleOk = async () => {
-  // 请求后端，添加表格项
-  const result = await myAxios.post('/pet/forum/add', formModal.value);
-  if (result.code == 0) {
-    message.success('添加成功');
-    open.value = false;
-  } else {
-    message.error('添加失败');
-  }
-  // 重新加载表格数据
-  loadData();
+    // 请求后端，添加表格项
+    const result = await myAxios.post('/singer/add', formModal.value);
+    if (result.code == 0) {
+      message.success('添加成功');
+      open.value = false;
+    } else {
+      message.error('添加失败');
+    }
+    // 重新加载表格数据
+    loadData();
 };
 
 const loadData = async () => {
-  const res = await myAxios.get('/pet/forum/list');
+  const res = await myAxios.get('/singer');
   if (res.code === 0) {
     dataSource.value = res.data.map((item, index) => ({
       ...item,
@@ -169,7 +153,6 @@ const loadData = async () => {
     }));
   }
 };
-
 
 onMounted(async () => {
   loadData();

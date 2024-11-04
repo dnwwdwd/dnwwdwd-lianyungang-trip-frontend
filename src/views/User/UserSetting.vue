@@ -7,7 +7,7 @@
           <div style="display: flex; flex-direction: column; justify-content: center; align-items: center">
             <img :src="user.avatarUrl"
                  style="border-radius: 50%; height: 200px; width: 200px"/>
-            <span style="font-size: 30px; color: deepskyblue; margin-top: 15px">{{user.nickname}}</span>
+            <span style="font-size: 30px; color: deepskyblue; margin-top: 15px">{{ user.nickname }}</span>
           </div>
         </div>
         <div style="margin-left: 20px">
@@ -25,15 +25,15 @@
           </div>
           <div class="input-div">
           <span class="label-text">
-            手机号：
+            头像：
           </span>
-            <a-input style="width: 300px;" class="input" v-model:value="user.phone"/>
+            <a-input style="width: 300px;" class="input" v-model:value="user.avatarUrl"/>
           </div>
           <div class="input-div">
           <span class="label-text">
-            地址：
+            手机号：
           </span>
-            <a-input style="width: 300px;" class="input" v-model:value="user.address"/>
+            <a-input style="width: 300px;" class="input" v-model:value="user.phone"/>
             <a-popconfirm
                 title="你确认要修改个人信息吗？"
                 ok-text="确认"
@@ -65,7 +65,7 @@ const loadData = async () => {
   }
 };
 
-onMounted( () => {
+onMounted(() => {
   loadData();
 });
 
