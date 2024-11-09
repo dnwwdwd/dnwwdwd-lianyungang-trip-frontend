@@ -8,20 +8,22 @@
                 width="200"
                 height="140"
                 alt="logo"
-                :src="item.imgs[0]"
+                :src="item.scenic.imgs[0]"
             />
           </template>
-          <a-list-item-meta :description="item.description">
+          <a-list-item-meta :description="item.scenic.address">
             <template #title>
-              <a :href="item.href">{{ item.name }}</a>
+              <a :href="item.href">{{ item.scenic.name }}</a>
             </template>
             <template #avatar>
               <a-avatar :src="item.user.avatarUrl"/>
             </template>
           </a-list-item-meta>
-          {{ item.content }}
+          预约时间：{{ item.reserveTime }}
           <br/>
-          上次雨预约：{{ item.reserveTime}}
+          开放时间：{{ item.scenic.openTime }}
+          <br/>
+          <span v-if="item.lastResereTime">上次预约：{{ item.lastResereTime}}</span>
         </a-list-item>
       </template>
     </a-list>
@@ -29,41 +31,45 @@
 </template>
 
 <script setup lang="js">
-import {ref} from 'vue'
+import {onMounted, ref} from 'vue'
 import {useRouter} from "vue-router";
+import myAxios from "../../plugins/myAxios.js";
 
 const router = useRouter();
 
-const listData = ref([
-  {
-    id: 1,
-    name: '海州湾海洋乐园',
-    description: '渔湾景区',
-    user: {
-      avatarUrl: 'https://hejiajun-img-bucket.oss-cn-wuhan-lr.aliyuncs.com/hm/56e55a4c-90d4-49c7-99e0-54a600f7afdd.jpg',
-    },
-    imgs: [
-      'https://hejiajun-img-bucket.oss-cn-wuhan-lr.aliyuncs.com/hm/56e55a4c-90d4-49c7-99e0-54a600f7afdd.jpg',
-      'https://hejiajun-img-bucket.oss-cn-wuhan-lr.aliyuncs.com/hm/56e55a4c-90d4-49c7-99e0-54a600f7afdd.jpg',
-    ],
-    content: 'content',
-    reserveTime: '2024.10.12',
+const listData = ref([]);
+
+
+const pagination = {
+  pageSize: 3,
+  onChange: async (page) => {
+    const res = await myAxios.get(`/reserve/get/my`, {
+      params: {
+        pageSize: pagination.pageSize,
+        page: page,
+      }
+    });
+    if (res.code === 0) {
+      listData.value = res.data;
+    }
   },
-  {
-    id: 2,
-    name: '渔湾景区',
-    description: '渔湾景区',
-    user: {
-      avatarUrl: 'https://hejiajun-img-bucket.oss-cn-wuhan-lr.aliyuncs.com/hm/56e55a4c-90d4-49c7-99e0-54a600f7afdd.jpg',
-    },
-    imgs: [
-      'https://hejiajun-img-bucket.oss-cn-wuhan-lr.aliyuncs.com/hm/56e55a4c-90d4-49c7-99e0-54a600f7afdd.jpg',
-      'https://hejiajun-img-bucket.oss-cn-wuhan-lr.aliyuncs.com/hm/56e55a4c-90d4-49c7-99e0-54a600f7afdd.jpg',
-    ],
-    content: 'content',
-    reserveTime: '2024.10.10',
+  total: 15,
+};
+
+onMounted(async () => {
+  const res = await myAxios.get(`/reserve/get/my`, {
+    params: {
+      pageSize: 10,
+      page: 1,
+    }
+  });
+  if (res.code === 0) {
+    listData.value = res.data;
   }
-]);
+
+
+});
+
 
 </script>
 

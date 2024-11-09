@@ -44,6 +44,7 @@ const pagination = {
     loadData(page);
   },
   pageSize: 3,
+  total: 15,
 };
 
 const loadData = async (page) => {

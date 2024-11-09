@@ -101,7 +101,7 @@ const onFinish = async (values) => {
   if (res.code === 0) {
     message.success('注册成功！');
     router.push({
-      path: '/login',
+      path: '/user/login',
     });
   } else {
     message.error('注册失败' + `${res.message ? `, ${res.message}` : ''}`);

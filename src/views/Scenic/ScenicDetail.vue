@@ -3,7 +3,7 @@
     border-radius: 5px; background-color: #f9f9f9;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); padding: 20px;
     margin: 0 auto;
-    width: 1000px">
+    width: 1000px; height: auto">
     <div style="height: 140px; display: flex; flex-direction: column">
       <span style="font-size: 30px;">{{ scenic.name }}</span>
       <span style="color: lightslategrey; margin-top: 5px; margin-bottom: 5px">{{ scenic.address }}</span>
@@ -25,7 +25,7 @@
       </div>
     </div>
 
-    <a-carousel autoplay style="margin-top: 3px">
+    <a-carousel autoplay style="margin-top: 3px" v-if="scenic.imgs">
       <div v-for="img in scenic.imgs">
         <a-image :src="img" :width="800" :height="420"/>
       </div>
@@ -33,6 +33,7 @@
 
     <div>
       <a-tag
+          v-if="scenic.tags"
           style="margin-top: 10px"
           v-for="(tag, index) in scenic.tags"
           :key="index"
@@ -40,44 +41,114 @@
       >
         {{ tag }}
       </a-tag>
-      <a-button style="background: #FF5C00; margin-left: 10px; color: white" @click="reserve(scenic.id)">
+      <a-button style="background: #FF5C00; margin-left: 10px; color: white" @click="open">
         预约
       </a-button>
+      <a-button v-if="isStarred" style="background: #FF5C00; color: white; margin-left: 10px" @click="star">
+        收藏
+      </a-button>
+      <a-button v-else style="background: #FF5C00; color: white; margin-left: 10px" @click="star_delete">
+        取消收藏
+      </a-button>
+      <a-modal v-model:open="show" title="预约" cancelText="取消" okText="确认预约" @ok="reserve(scenic.id)">
+        <div>
+          <span>请输入预约时间：</span>
+          <a-date-picker
+              show-time
+              style="width: 200px"
+              v-model:value="reserveTime"
+              :disabled-date="disabledDate"
+              placeholder="请输入预约时间"
+              @change="onChange" @ok="onOk"
+          />
+        </div>
+      </a-modal>
     </div>
   </div>
 </template>
 
 <script setup lang="js">
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import myAxios from "../../plugins/myAxios.js";
+import {useRoute} from "vue-router";
+import {message} from "ant-design-vue";
+import moment from 'moment';
 
-// const id = route.params.id;
+const route = useRoute();
+const id = route.params.id;
 
 const colors = ref(["pink", "red", "orange", "green", "blue"]);
 
-const scenic = ref({
-  id: 1,
-  name: '你好',
-  imgs: ['https://res.klook.com/image/upload/c_fill,w_627,h_470/q_80/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/ycgfaxmc6waeborzsmba.webp',
-    'https://res.klook.com/image/upload/c_fill,w_627,h_470/q_80/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/nt4wkvl6tcdi9t3sv0jv.webp'],
-  price: 80,
-  address: '连云港赣榆区',
-  star: 19,
-  tags: ["热卖", "促销", "轻松预约"],
-  ticket: 10,
-  score: 4.5,
-  openTime: '08:30-18:00开放',
-  phone: '14u4u492'
+
+const scenic = ref({});
+const show = ref(false);
+const reserveTime = ref();
+const isStarred = ref(true);
+
+const disabledDate = (current) => {
+  return current && current < moment().startOf('minute');
+};
+
+const onChange = (value, dateString) => {
+  console.log('Selected Time: ', value);
+  console.log('Formatted Selected Time: ', dateString);
+};
+
+const onOk = (value) => {
+  reserveTime.value = value;
+};
+
+onMounted(async () => {
+  const res = await myAxios.get(`/scenic/${id}`);
+  if (res.code === 0) {
+    scenic.value = res.data;
+  }
+  const result = await myAxios.get(`/scenic_starred`, {
+    params: {
+      scenicId: id
+    }
+  });
+  if (result.data) {
+    isStarred.value = false;
+  }
 });
 
-const reserve = async (id) => {
-  // const res = await myAxios.post(`/reserve/add/`, {
-  //   id: id
-  // });
-  // if (res.code === 0) {
-  //
-  // }
+const open = () => {
+  show.value = true;
 };
+
+const reserve = async (id) => {
+  console.log(id)
+  const res = await myAxios.post(`/reserve/add`, {
+    scenicId: id,
+    reserveTime: reserveTime.value,
+  });
+  if (res.code === 0) {
+    show.value = false;
+    message.success("预约成功");
+  }
+};
+
+const star = async () => {
+  const res = await myAxios.post('/scenic_star/add', {
+    scenicId: id,
+  });
+  if (res.data) {
+    isStarred.value = false;
+    message.success('收藏成功');
+  }
+}
+
+const star_delete = async () => {
+  const res = await myAxios.post('/scenic_star/delete', {
+    scenicId: id,
+  });
+  if (res.data) {
+    isStarred.value = true;
+    message.success('取消收藏成功');
+  }
+}
+
 
 </script>
 

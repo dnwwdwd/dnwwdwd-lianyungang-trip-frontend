@@ -13,8 +13,6 @@
     <a-input v-model:value="formModal.email" class="a-input"/>
     手机号：
     <a-input v-model:value="formModal.phone" class="a-input"/>
-    地址：
-    <a-input v-model:value="formModal.address" class="a-input"/>
     头像：
     <a-input v-model:value="formModal.avatarUrl" class="a-input"/>
   </a-modal>
@@ -93,11 +91,6 @@ const columns = [
     width: '10%',
   },
   {
-    title: '地址',
-    dataIndex: 'address',
-    width: '10%',
-  },
-  {
     title: '头像',
     dataIndex: 'avatarUrl',
     width: '10%',
@@ -161,7 +154,6 @@ const formModal = ref({
   nickname: '',
   email: '',
   phone: '',
-  address: '',
   avatarUrl: '',
   sex: '',
   birth: '',

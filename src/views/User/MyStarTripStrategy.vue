@@ -49,10 +49,10 @@ const actions = [
   { icon: StarOutlined, text: '156' },
 ];
 
-let pagination = {
+const pagination = {
   pageSize: 3,
   onChange: async (page) => {
-    const res = await myAxios.get(`/strategy/list`, {
+    const res = await myAxios.get(`/strategy_star/list/my.`, {
       params: {
         pageSize: pagination.pageSize,
         page: page,
@@ -66,14 +66,14 @@ let pagination = {
 };
 
 onMounted(async () => {
-  const res = await myAxios.get(`/strategy/list`, {
+  const res = await myAxios.get(`/strategy_star/list/my`, {
     params: {
       pageSize: pagination.pageSize,
       page: 1,
     }
   });
   if (res.code === 0) {
-    listData.value = res.data;
+    listData.value = res.data.flatMap(item => item.strategy);
   }
 });
 

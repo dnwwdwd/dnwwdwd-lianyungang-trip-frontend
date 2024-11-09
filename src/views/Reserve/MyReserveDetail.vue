@@ -20,7 +20,7 @@
         <div>
           <a-tag
               style="margin-top: 10px"
-              v-for="(tag, index) in reserveVO.scenic.tags"
+              v-for="(tag, index) in reserveVO.imgs"
               :key="index"
               :color="colors[index % colors.length]"
           >
@@ -31,8 +31,19 @@
       <div style="display: flex; flex-direction: column; gap: 10px">
         <span style="margin-left: 2px">预约人：{{ reserveVO.user.nickname }}</span>
         <span>预约时间：{{ reserveVO.reserveTime }}</span>
-        <span>上次预约时间：{{ reserveVO.lastReserveTime }}</span>
-        <a-button type="primary" style="width: 80px" v-if="reserveVO.evaluation && reserveVO.evaluation.status === 2">评价</a-button>
+        <span v-if="reserveVO.lastReserveTime">上次预约时间：{{ reserveVO.lastReserveTime }}</span>
+        <a-button style="width: 80px; color: white; background: #FD5B04"
+                  v-if="reserveVO.status === 2" @click="open=true">
+          评价
+        </a-button>
+        <a-modal v-model:open="open" title="请给好评吧" cancelText="取消" okText="确认评价" @ok="handleOK">
+          评分；
+          <a-rate v-model:value="formModal.score" allow-half/>
+          <div>
+            评价：
+            <a-textarea v-model:value="formModal.content" :rows="4" placeholder="请输入评价"/>
+          </div>
+        </a-modal>
       </div>
     </div>
     <div style="width: 400px; margin-left: 40px;">
@@ -46,53 +57,61 @@
 </template>
 
 <script setup lang="js">
-import {ref} from "vue";
+import {onMounted, ref} from "vue";
 import myAxios from "../../plugins/myAxios.js";
+import {useRoute} from "vue-router";
+import {message} from "ant-design-vue";
 
-// const id = route.params.id;
+const route = useRoute();
+
+const id = route.params.id;
 
 const colors = ref(["pink", "red", "orange", "green", "blue"]);
 
 const watermarkContent = ref('预约完成');
 
 const reserveVO = ref({
-  scenic: {
-    id: 1,
-    name: '你好',
-    imgs: ['https://res.klook.com/image/upload/c_fill,w_627,h_470/q_80/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/ycgfaxmc6waeborzsmba.webp',
-      'https://res.klook.com/image/upload/c_fill,w_627,h_470/q_80/w_80,x_15,y_15,g_south_west,l_Klook_water_br_trans_yhcmh3/activities/nt4wkvl6tcdi9t3sv0jv.webp'],
-    price: 80,
-    address: '连云港赣榆区',
-    star: 19,
-    tags: ["热卖", "促销", "轻松预约"],
-    ticket: 10,
-    score: 4.5,
-    openTime: '08:30-18:00开放',
-    phone: '14u4u492',
-  },
-  user: {
-    nickname: '汉堡',
-    avatarUrl: 'https://hejiajun-img-bucket.oss-cn-wuhan-lr.aliyuncs.com/hm/56e55a4c-90d4-49c7-99e0-54a600f7afdd.jpg'
-  },
-  reserveTime: '2024-05-05 14:00:00',
-  lastReserveTime: '2024-05-05 14:00:00',
-  evaluation: {
-    content: ''
+  scenic: {},
+  user: {}
+});
+
+const open = ref(false);
+
+onMounted(async () => {
+  const res = await myAxios.get(`/reserve/${id}`);
+  if (res.code === 0) {
+    reserveVO.value = res.data;
+  }
+  if (res.data.status === 0) {
+    watermarkContent.value = '等待参观';
+  }
+  if (res.data.status === 1) {
+    watermarkContent.value = '已完成参观';
+  }
+  if (res.data.status === 2) {
+    watermarkContent.value = '等待评价';
+  }
+  if (res.data.status === 3) {
+    watermarkContent.value = '已评价';
   }
 });
 
-// if (res.data.status === 0) {
-//   watermarkContent.value = '等待参观';
-// }
-// if (res.data.status === 1) {
-//   watermarkContent.value = '已完成参观';
-// }
-// if (res.data.status === 2) {
-//   watermarkContent.value = '等待评价';
-// }
-// if (res.data.status === 3) {
-//   watermarkContent.value = '已评价';
-// }
+const formModal = ref({
+  score: 0,
+  content: ''
+});
+
+const handleOK = async () => {
+  const res = await myAxios.post('/evaluation/add', {
+    score: formModal.value.score,
+    content: formModal.value.content,
+    reserveId: id
+  });
+  if (res.code === 0) {
+    message.success('评价成功');
+    open.value = false;
+  }
+}
 
 </script>
 
