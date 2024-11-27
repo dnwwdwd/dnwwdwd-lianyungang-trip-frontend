@@ -103,6 +103,8 @@ const isScenicAdmin = ref(false);
 const isSuperAdmin = ref(false);
 const user = ref({});
 
+const router = useRouter();
+
 const uploadImage = () => {
   formModal.value.imgs.push(image.value)
   image.value = ''
@@ -117,6 +119,10 @@ onMounted(async () => {
       isAdmin.value = user.value.role === "admin";
       isScenicAdmin.value = user.value.role === 'scenic_admin';
       isSuperAdmin.value = user.value.role === 'super_admin';
+    }
+    if (res.code === 40100) {
+      message.info('请先登录');
+      router.push('/user/login');
     }
   }
 });
