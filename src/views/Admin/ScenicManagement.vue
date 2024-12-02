@@ -1,6 +1,6 @@
 <template>
   <a-button type="primary" class="editable-add-btn" style="margin-bottom: 8px; margin-top: 12px" @click="handleAdd">添加景区</a-button>
-  <a-modal v-model:open="open" title="添加歌手" @ok="handleOk" cancelText="取消" okText="确认添加">
+  <a-modal v-model:open="open" title="添加景区" @ok="handleOk" cancelText="取消" okText="确认添加">
     景区名称：<a-input v-model:value="formModal.name" class="a-input"/>
     图片：
     <a-input placeholder="请输入图片链接，按下回车输入下一个链接（不按回车不会存储）" class="a-input" v-model:value="image"
